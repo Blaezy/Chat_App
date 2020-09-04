@@ -1,4 +1,6 @@
+import 'package:chat_app/screens/auth_screen.dart';
 import 'package:chat_app/screens/chat_screen.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 
@@ -45,10 +47,26 @@ class _MyAppState extends State<MyApp> {
         ? MaterialApp(
             title: 'Flutter chat',
             theme: ThemeData(
-              primarySwatch: Colors.blue,
+              primarySwatch: Colors.pink,
+              backgroundColor: Colors.pink,
+              accentColor: Colors.deepPurple,
+              accentColorBrightness: Brightness.dark,
+              buttonTheme: ButtonTheme.of(context).copyWith(
+                  buttonColor: Colors.pink,
+                  textTheme: ButtonTextTheme.primary,
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20))),
               visualDensity: VisualDensity.adaptivePlatformDensity,
             ),
-            home: ChatScreen(),
+            home: StreamBuilder(
+                builder: (ctx, snapshot) {
+                  if (snapshot.hasData) {
+                    return ChatScreen();
+                  } else {
+                    return AuthScreen();
+                  }
+                },
+                stream: FirebaseAuth.instance.authStateChanges()),
           )
         : Center(child: CircularProgressIndicator());
   }
