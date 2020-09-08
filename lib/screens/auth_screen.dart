@@ -1,5 +1,7 @@
+import 'dart:io';
 import 'package:chat_app/widgets/auth/auth_form.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/services.dart';
@@ -13,7 +15,7 @@ class _AuthScreenState extends State<AuthScreen> {
   final instance = FirebaseAuth.instance;
   var isLoading = false;
   void _submitAuthForm(String email, String password, String userName,
-      bool isLogin, BuildContext ctx) async {
+      bool isLogin, File foto, BuildContext ctx) async {
     UserCredential result;
     if (mounted)
       setState(() {
@@ -26,11 +28,17 @@ class _AuthScreenState extends State<AuthScreen> {
       } else {
         result = await instance.createUserWithEmailAndPassword(
             email: email, password: password);
+        final ref = FirebaseStorage.instance
+            .ref()
+            .child('user_image')
+            .child(result.user.uid + '.jpg');
+        await ref.putFile(foto).onComplete;
+        final url = await ref.getDownloadURL();
+        await FirebaseFirestore.instance
+            .collection('Users')
+            .doc(result.user.uid)
+            .set({'userName': userName, 'email': email, 'image_url': url});
       }
-      await FirebaseFirestore.instance
-          .collection('Users')
-          .doc(result.user.uid)
-          .set({'userName': userName, 'email': email});
     } on PlatformException catch (err) {
       var errormsz = 'Could not validate your credentials';
       if (err.message != null) {
